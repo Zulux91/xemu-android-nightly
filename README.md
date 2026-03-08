@@ -2,7 +2,7 @@
 
 [![GitHub Release](https://img.shields.io/github/v/release/Zulux91/xemu-android-nightly?label=Current%20Release)](https://github.com/Zulux91/xemu-android-nightly/releases/latest)
 [![GitHub Downloads](https://img.shields.io/github/downloads/Zulux91/xemu-android-nightly/total?logo=github&label=GitHub%20Downloads)](https://github.com/Zulux91/xemu-android-nightly/releases/latest)
-[![CI Build](https://img.shields.io/github/actions/workflow/status/Zulux91/xemu-android-nightly/build-xemu.yml/badge.svg)](https://github.com/Zulux91/xemu-android-nightly/releases/latest)
+[![CI Build](https://github.com//Zulux91/xemu-android-nightly/actions/workflows/build-xemu.yml/badge.svg)](https://github.com/Zulux91/xemu-android-nightly/releases/latest)
 
 
 Automated build pipeline for [X1 BOX](https://github.com/izzy2lost/xemu) — an Original Xbox emulator for Android based on [xemu](https://xemu.app).
