@@ -2,7 +2,7 @@
 
 [![GitHub Release](https://img.shields.io/github/v/release/Zulux91/xemu-android-nightly?label=Current%20Release)](https://github.com/Zulux91/xemu-android-nightly/releases/latest)
 [![GitHub Downloads](https://img.shields.io/github/downloads/Zulux91/xemu-android-nightly/total?logo=github&label=GitHub%20Downloads)](https://github.com/Zulux91/xemu-android-nightly/releases/latest)
-[![CI Build](https://github.com//Zulux91/xemu-android-nightly/actions/workflows/build-xemu.yml/badge.svg)](https://github.com/Zulux91/xemu-android-nightly/releases/latest)
+[![CI Build](https://github.com/Zulux91/xemu-android-nightly/actions/workflows/build-xemu.yml/badge.svg)](https://github.com/Zulux91/xemu-android-nightly/releases/latest)
 [![GitHub Last Commit (upstream)](https://img.shields.io/github/last-commit/izzy2lost/xemu?label=upstream%20last%20commit)](https://github.com/izzy2lost/xemu/commits/master)
 [![Android](https://img.shields.io/badge/Android-8.0%2B-brightgreen?logo=android)](https://developer.android.com)
 
