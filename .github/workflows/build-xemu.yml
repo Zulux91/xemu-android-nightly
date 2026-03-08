@@ -50,7 +50,9 @@ jobs:
           restore-keys: cmake-arm64-${{ github.event.inputs.ref }}-
 
       - name: Grant execute permission to gradlew
-        run: chmod +x xemu/android/gradlew
+        run: |
+          sed -i 's/\r//' xemu/android/gradlew
+          chmod +x xemu/android/gradlew
 
       - name: Build Debug APK
         working-directory: xemu/android
