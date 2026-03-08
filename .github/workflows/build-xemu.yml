@@ -49,20 +49,12 @@ jobs:
           key: cmake-arm64-${{ github.event.inputs.ref }}-${{ github.run_id }}
           restore-keys: cmake-arm64-${{ github.event.inputs.ref }}-
 
-      - name: Fix line endings and permissions
+      - name: Fix gradle configuration for Linux
         run: |
           sudo apt-get install -y dos2unix
           find xemu/android -type f \( -name "*.properties" -o -name "*.gradle" -o -name "*.kts" -o -name "gradlew" \) | xargs dos2unix
+          sed -i '/org.gradle.java.home/d' xemu/android/gradle.properties
           chmod +x xemu/android/gradlew
-
-      - name: Diagnose gradlew
-        run: |
-          echo "=== Primeras líneas de gradlew ==="
-          head -10 xemu/android/gradlew | cat -A
-          echo "=== gradle.properties ==="
-          cat -A xemu/android/gradle.properties
-          echo "=== gradle-wrapper.properties ==="
-          cat -A xemu/android/gradle/wrapper/gradle-wrapper.properties
 
       - name: Build Debug APK
         working-directory: xemu/android
@@ -70,7 +62,6 @@ jobs:
         env:
           ANDROID_SDK_ROOT: ${{ env.ANDROID_SDK_ROOT }}
           ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_HOME }}
-          JAVA_TOOL_OPTIONS: "-Xmx4096m -Xms512m"
 
       - name: Get version name
         id: version
