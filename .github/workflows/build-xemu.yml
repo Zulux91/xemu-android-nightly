@@ -42,6 +42,15 @@ jobs:
             "platforms;android-36"
           echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/29.0.14206865" >> $GITHUB_ENV
 
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            meson ninja-build python3 python-is-python3 \
+            rustup dos2unix
+          rustup default stable
+          rustup target add aarch64-linux-android
+
       - name: Cache native CMake build
         uses: actions/cache@v4
         with:
@@ -49,13 +58,17 @@ jobs:
           key: cmake-arm64-${{ github.event.inputs.ref }}-${{ github.run_id }}
           restore-keys: cmake-arm64-${{ github.event.inputs.ref }}-
 
-      - name: Fix gradle configuration for Linux
+      - name: Fix gradle and CMake configuration for Linux
         run: |
-          sudo apt-get install -y dos2unix
+          # Fix line endings y permisos de gradle
           find xemu/android -type f \( -name "*.properties" -o -name "*.gradle" -o -name "*.kts" -o -name "gradlew" \) | xargs dos2unix
           sed -i '/org.gradle.java.home/d' xemu/android/gradle.properties
           sed -i "s/DEFAULT_JVM_OPTS='\".*\"'/DEFAULT_JVM_OPTS=''/" xemu/android/gradlew
           chmod +x xemu/android/gradlew
+
+          # Fix rutas del NDK hardcodeadas a Windows en CMakeLists.txt
+          sed -i 's|windows-x86_64|linux-x86_64|g' \
+            xemu/android/app/src/main/cpp/CMakeLists.txt
 
       - name: Build Debug APK
         working-directory: xemu/android
