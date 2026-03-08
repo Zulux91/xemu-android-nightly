@@ -43,26 +43,52 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      - name: Set up Android SDK
+      - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install NDK and CMake
+      - name: Install SDK / NDK / CMake
         run: |
+          yes | sdkmanager --licenses
           sdkmanager \
             "ndk;29.0.14206865" \
             "cmake;3.30.3" \
             "build-tools;36.1.0" \
             "platforms;android-36"
           echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/29.0.14206865" >> $GITHUB_ENV
+          echo "ANDROID_NDK_ROOT=$ANDROID_SDK_ROOT/ndk/29.0.14206865" >> $GITHUB_ENV
 
       - name: Install build dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
             meson ninja-build python3 python-is-python3 \
-            rustup dos2unix
-          rustup default stable
+            dos2unix
+
+      - name: Install Rust (rustup + cargo)
+        shell: bash
+        run: |
+          set -e
+          echo "CARGO_HOME=$HOME/.cargo" >> $GITHUB_ENV
+          echo "RUSTUP_HOME=$HOME/.rustup" >> $GITHUB_ENV
+          curl -sSf https://sh.rustup.rs | sh -s -- -y
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+          rustc --version
+          cargo --version
+
+      - name: Add Rust Android target (arm64)
+        shell: bash
+        run: |
+          set -e
           rustup target add aarch64-linux-android
+          rustup target list --installed
+
+      - name: Export Android toolchain for cargo
+        shell: bash
+        run: |
+          set -e
+          echo "CC_aarch64_linux_android=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android26-clang" >> $GITHUB_ENV
+          echo "CXX_aarch64_linux_android=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android26-clang++" >> $GITHUB_ENV
+          echo "AR_aarch64_linux_android=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar" >> $GITHUB_ENV
 
       - name: Cache native CMake build
         uses: actions/cache@v4
@@ -74,30 +100,64 @@ jobs:
       - name: Fix gradle and CMake configuration for Linux
         run: |
           find xemu/android -type f \( -name "*.properties" -o -name "*.gradle" -o -name "*.kts" -o -name "gradlew" \) | xargs dos2unix
-          sed -i '/org.gradle.java.home/d' xemu/android/gradle.properties
-          sed -i "s/DEFAULT_JVM_OPTS='\".*\"'/DEFAULT_JVM_OPTS=''/" xemu/android/gradlew
+          for f in xemu/android/gradle.properties gradle.properties "$HOME/.gradle/gradle.properties"; do
+            if [ -f "$f" ]; then
+              sed -i '/^\s*org\.gradle\.java\.home\s*=/d' "$f"
+            fi
+          done
+          sed -i 's/^DEFAULT_JVM_OPTS=.*/DEFAULT_JVM_OPTS="-Xmx2g -Xms256m"/' xemu/android/gradlew || true
           chmod +x xemu/android/gradlew
-          sed -i 's|windows-x86_64|linux-x86_64|g' \
-            xemu/android/app/src/main/cpp/CMakeLists.txt
+          grep -RIl "windows-x86_64" xemu/android | xargs -r sed -i 's/windows-x86_64/linux-x86_64/g'
+
+      - name: Detect App Name + Version
+        id: meta
+        shell: bash
+        run: |
+          set -e
+          GRADLE="xemu/android/app/build.gradle.kts"
+          STRINGS="xemu/android/app/src/main/res/values/strings.xml"
+
+          VERSION_NAME=$(grep -m1 -E 'versionName\s*=' "$GRADLE" | sed -E 's/.*"([^"]+)".*/\1/')
+          APP_NAME=$(grep -m1 -E '<string\s+name="app_name"\s*>' "$STRINGS" | sed -E 's/.*>([^<]+)<\/string>.*/\1/')
+          APP_NAME_SAFE=$(echo "$APP_NAME" | tr ' ' '-' | tr -cd 'A-Za-z0-9._-')
+
+          echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
+          echo "APP_NAME=$APP_NAME" >> $GITHUB_ENV
+          echo "APP_NAME_SAFE=$APP_NAME_SAFE" >> $GITHUB_ENV
 
       - name: Build Debug APK
         working-directory: xemu/android
-        run: ./gradlew assembleDebug --stacktrace
+        run: |
+          ./gradlew clean
+          ./gradlew assembleDebug --stacktrace
         env:
           ANDROID_SDK_ROOT: ${{ env.ANDROID_SDK_ROOT }}
           ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_HOME }}
 
-      - name: Get version name
-        id: version
+      - name: Rename Debug APK
         run: |
-          VERSION=$(grep 'versionName' xemu/android/app/build.gradle.kts | grep -oP '"\K[^"]+')
-          echo "name=$VERSION" >> $GITHUB_OUTPUT
+          set -e
+          APK_DIR="xemu/android/app/build/outputs/apk/debug"
+          SRC_APK=$(find "$APK_DIR" -type f -name "*.apk" | head -n 1)
+          FINAL_APK="$APK_DIR/${APP_NAME_SAFE}-${VERSION_NAME}-debug.apk"
+
+          if [ -z "$SRC_APK" ]; then
+            echo "❌ Debug APK not found!"
+            exit 1
+          fi
+
+          mv "$SRC_APK" "$FINAL_APK"
+          echo "DEBUG_APK=$FINAL_APK" >> $GITHUB_ENV
+
+      - name: Verify Debug APK signature
+        run: |
+          "$ANDROID_SDK_ROOT/build-tools/36.1.0/apksigner" verify --verbose "${{ env.DEBUG_APK }}"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps.version.outputs.name }}
-          name: X1 BOX v${{ steps.version.outputs.name }}
+          tag_name: v${{ env.VERSION_NAME }}
+          name: X1 BOX v${{ env.VERSION_NAME }}
           draft: false
           prerelease: false
           body: |
@@ -106,4 +166,4 @@ jobs:
             📌 Commit: [`${{ steps.commit.outputs.hash }}`](https://github.com/izzy2lost/xemu/commit/${{ steps.commit.outputs.hash }}) — ${{ steps.commit.outputs.msg }}
 
             ⚠️ APK signed with debug key. Only for testing.
-          files: xemu/android/app/build/outputs/apk/debug/*.apk
+          files: ${{ env.DEBUG_APK }}
