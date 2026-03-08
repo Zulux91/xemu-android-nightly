@@ -40,6 +40,13 @@ Triggering the workflow will:
 - You must provide your own legally obtained Xbox BIOS and game files to use the emulator
 - Compatibility and performance vary by device and game
 
+> **⚠️ For forks:** Keep the repository name as short as possible. The native build
+> system (CMake) has a maximum object file path length of 180 characters. GitHub Actions
+> constructs the working directory as:
+> `/home/runner/work/{repo-name}/{repo-name}/xemu/android/app/.cxx/...`
+> A long repository name will eat into that limit and may cause build failures.
+> A name under 20 characters is recommended.
+
 ## Credits
 
 - Emulator core: [xemu-project/xemu](https://github.com/xemu-project/xemu)
