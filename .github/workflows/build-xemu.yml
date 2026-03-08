@@ -10,7 +10,7 @@ on:
         default: 'master'
 
 permissions:
-  contents: write  # necesario para crear el release
+  contents: write
 
 jobs:
   build:
@@ -52,9 +52,17 @@ jobs:
       - name: Fix line endings and permissions
         run: |
           sudo apt-get install -y dos2unix
-          dos2unix xemu/android/gradlew
-          dos2unix xemu/android/gradle.properties
+          find xemu/android -type f \( -name "*.properties" -o -name "*.gradle" -o -name "*.kts" -o -name "gradlew" \) | xargs dos2unix
           chmod +x xemu/android/gradlew
+
+      - name: Diagnose gradlew
+        run: |
+          echo "=== Primeras líneas de gradlew ==="
+          head -10 xemu/android/gradlew | cat -A
+          echo "=== gradle.properties ==="
+          cat -A xemu/android/gradle.properties
+          echo "=== gradle-wrapper.properties ==="
+          cat -A xemu/android/gradle/wrapper/gradle-wrapper.properties
 
       - name: Build Debug APK
         working-directory: xemu/android
@@ -62,6 +70,7 @@ jobs:
         env:
           ANDROID_SDK_ROOT: ${{ env.ANDROID_SDK_ROOT }}
           ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_HOME }}
+          JAVA_TOOL_OPTIONS: "-Xmx4096m -Xms512m"
 
       - name: Get version name
         id: version
