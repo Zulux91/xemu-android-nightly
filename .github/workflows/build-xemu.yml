@@ -23,6 +23,12 @@ jobs:
             --branch ${{ github.event.inputs.ref }} \
             https://github.com/izzy2lost/xemu.git xemu
 
+      - name: Get commit hash
+        id: commit
+        run: |
+          HASH=$(git -C xemu rev-parse --short HEAD)
+          echo "hash=$HASH" >> $GITHUB_OUTPUT
+
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
@@ -88,5 +94,7 @@ jobs:
           body: |
             Build automático desde [izzy2lost/xemu@${{ github.event.inputs.ref }}](https://github.com/izzy2lost/xemu/tree/${{ github.event.inputs.ref }})
 
-            > ⚠️ APK firmado con debug key — solo para pruebas.
+            📌 Commit de compilación: [`${{ steps.commit.outputs.hash }}`](https://github.com/izzy2lost/xemu/commit/${{ steps.commit.outputs.hash }})
+
+            > ⚠️ APK firmado con debug key. Solo para pruebas.
           files: xemu/android/app/build/outputs/apk/debug/*.apk
