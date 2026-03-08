@@ -27,7 +27,9 @@ jobs:
         id: commit
         run: |
           HASH=$(git -C xemu rev-parse --short HEAD)
+          MSG=$(git -C xemu log -1 --pretty=format:"%s")
           echo "hash=$HASH" >> $GITHUB_OUTPUT
+          echo "msg=$MSG" >> $GITHUB_OUTPUT
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -96,7 +98,7 @@ jobs:
           body: |
             Automatic build from [izzy2lost/xemu@${{ github.event.inputs.ref }}](https://github.com/izzy2lost/xemu/tree/${{ github.event.inputs.ref }})
 
-            📌 Commit: [`${{ steps.commit.outputs.hash }}`](https://github.com/izzy2lost/xemu/commit/${{ steps.commit.outputs.hash }})
+            📌 Commit: [`${{ steps.commit.outputs.hash }}`](https://github.com/izzy2lost/xemu/commit/${{ steps.commit.outputs.hash }}) — ${{ steps.commit.outputs.msg }}
 
             ⚠️ APK signed with debug key. Only for testing.
           files: xemu/android/app/build/outputs/apk/debug/*.apk
