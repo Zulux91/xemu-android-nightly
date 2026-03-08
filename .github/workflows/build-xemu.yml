@@ -49,10 +49,11 @@ jobs:
           key: cmake-arm64-${{ github.event.inputs.ref }}-${{ github.run_id }}
           restore-keys: cmake-arm64-${{ github.event.inputs.ref }}-
 
-      - name: Fix gradlew line endings and permissions
+      - name: Fix line endings and permissions
         run: |
           sudo apt-get install -y dos2unix
           dos2unix xemu/android/gradlew
+          dos2unix xemu/android/gradle.properties
           chmod +x xemu/android/gradlew
 
       - name: Build Debug APK
