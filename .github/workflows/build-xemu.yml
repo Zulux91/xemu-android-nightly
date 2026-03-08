@@ -96,5 +96,5 @@ jobs:
 
             📌 Commit: [`${{ steps.commit.outputs.hash }}`](https://github.com/izzy2lost/xemu/commit/${{ steps.commit.outputs.hash }})
 
-            > ⚠️ APK signed with debug key. Only for testing.
+            ⚠️ APK signed with debug key. Only for testing.
           files: xemu/android/app/build/outputs/apk/debug/*.apk
