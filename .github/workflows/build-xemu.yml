@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
     inputs:
       ref:
-        description: 'Branch o tag a compilar'
+        description: 'Branch or tag to compile'
         required: false
         default: 'master'
 
@@ -92,9 +92,9 @@ jobs:
           tag_name: v${{ steps.version.outputs.name }}-build${{ github.run_number }}
           name: X1 BOX v${{ steps.version.outputs.name }} (debug)
           body: |
-            Build automático desde [izzy2lost/xemu@${{ github.event.inputs.ref }}](https://github.com/izzy2lost/xemu/tree/${{ github.event.inputs.ref }})
+            Automatic build from [izzy2lost/xemu@${{ github.event.inputs.ref }}](https://github.com/izzy2lost/xemu/tree/${{ github.event.inputs.ref }})
 
-            📌 Commit de compilación: [`${{ steps.commit.outputs.hash }}`](https://github.com/izzy2lost/xemu/commit/${{ steps.commit.outputs.hash }})
+            📌 Commit: [`${{ steps.commit.outputs.hash }}`](https://github.com/izzy2lost/xemu/commit/${{ steps.commit.outputs.hash }})
 
-            > ⚠️ APK firmado con debug key. Solo para pruebas.
+            > ⚠️ APK signed with debug key. Only for testing.
           files: xemu/android/app/build/outputs/apk/debug/*.apk
