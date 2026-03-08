@@ -1,4 +1,4 @@
-yaml# .github/workflows/build-xemu.yml
+# .github/workflows/build-xemu.yml
 name: Build X1 BOX
 
 on:
