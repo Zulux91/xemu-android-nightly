@@ -1,0 +1,77 @@
+# .github/workflows/build-xemu.yml
+name: Build X1 BOX
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Branch o tag a compilar'
+        required: false
+        default: 'master'
+
+permissions:
+  contents: write  # necesario para crear el release
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clone izzy2lost/xemu
+        run: |
+          git clone --recurse-submodules --depth 1 \
+            --branch ${{ github.event.inputs.ref }} \
+            https://github.com/izzy2lost/xemu.git xemu
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install NDK and CMake
+        run: |
+          sdkmanager \
+            "ndk;29.0.14206865" \
+            "cmake;3.30.3" \
+            "build-tools;36.1.0" \
+            "platforms;android-36"
+          echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/29.0.14206865" >> $GITHUB_ENV
+
+      - name: Cache native CMake build
+        uses: actions/cache@v4
+        with:
+          path: xemu/android/app/.cxx
+          key: cmake-arm64-${{ github.event.inputs.ref }}-${{ github.run_id }}
+          restore-keys: cmake-arm64-${{ github.event.inputs.ref }}-
+
+      - name: Grant execute permission to gradlew
+        run: chmod +x xemu/android/gradlew
+
+      - name: Build Debug APK
+        working-directory: xemu/android
+        run: ./gradlew assembleDebug --stacktrace
+        env:
+          ANDROID_SDK_ROOT: ${{ env.ANDROID_SDK_ROOT }}
+          ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_HOME }}
+
+      - name: Get version name
+        id: version
+        run: |
+          VERSION=$(grep 'versionName' xemu/android/app/build.gradle.kts | grep -oP '"\K[^"]+')
+          echo "name=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.name }}-build${{ github.run_number }}
+          name: X1 BOX v${{ steps.version.outputs.name }} (debug)
+          body: |
+            Build automático desde [izzy2lost/xemu@${{ github.event.inputs.ref }}](https://github.com/izzy2lost/xemu/tree/${{ github.event.inputs.ref }})
+
+            > ⚠️ APK firmado con debug key — solo para pruebas.
+          files: xemu/android/app/build/outputs/apk/debug/*.apk
