@@ -54,6 +54,7 @@ jobs:
           sudo apt-get install -y dos2unix
           find xemu/android -type f \( -name "*.properties" -o -name "*.gradle" -o -name "*.kts" -o -name "gradlew" \) | xargs dos2unix
           sed -i '/org.gradle.java.home/d' xemu/android/gradle.properties
+          sed -i "s/DEFAULT_JVM_OPTS='\".*\"'/DEFAULT_JVM_OPTS=''/" xemu/android/gradlew
           chmod +x xemu/android/gradlew
 
       - name: Build Debug APK
