@@ -89,8 +89,10 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps.version.outputs.name }}-build${{ github.run_number }}
-          name: X1 BOX v${{ steps.version.outputs.name }} (debug)
+          tag_name: v${{ steps.version.outputs.name }}
+          name: X1 BOX v${{ steps.version.outputs.name }}
+          draft: false
+          prerelease: false
           body: |
             Automatic build from [izzy2lost/xemu@${{ github.event.inputs.ref }}](https://github.com/izzy2lost/xemu/tree/${{ github.event.inputs.ref }})
 
