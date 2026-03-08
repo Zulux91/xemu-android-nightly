@@ -90,13 +90,6 @@ jobs:
           echo "CXX_aarch64_linux_android=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android26-clang++" >> $GITHUB_ENV
           echo "AR_aarch64_linux_android=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar" >> $GITHUB_ENV
 
-      - name: Cache native CMake build
-        uses: actions/cache@v4
-        with:
-          path: xemu/android/app/.cxx
-          key: cmake-arm64-${{ github.event.inputs.ref }}-${{ hashFiles('xemu/android/app/src/main/cpp/CMakeLists.txt', 'xemu/android/app/build.gradle.kts') }}
-          restore-keys: cmake-arm64-${{ github.event.inputs.ref }}-
-
       - name: Fix gradle and CMake configuration for Linux
         run: |
           find xemu/android -type f \( -name "*.properties" -o -name "*.gradle" -o -name "*.kts" -o -name "gradlew" \) | xargs dos2unix
@@ -124,6 +117,11 @@ jobs:
           echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
           echo "APP_NAME=$APP_NAME" >> $GITHUB_ENV
           echo "APP_NAME_SAFE=$APP_NAME_SAFE" >> $GITHUB_ENV
+          echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_OUTPUT
+          echo "APP_NAME_SAFE=$APP_NAME_SAFE" >> $GITHUB_OUTPUT
+
+      - name: Delete .cxx
+        run: rm -rf xemu/android/app/.cxx
 
       - name: Build Debug APK
         working-directory: xemu/android
@@ -135,6 +133,7 @@ jobs:
           ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_HOME }}
 
       - name: Rename Debug APK
+        id: apk
         run: |
           set -e
           APK_DIR="xemu/android/app/build/outputs/apk/debug"
@@ -148,16 +147,17 @@ jobs:
 
           mv "$SRC_APK" "$FINAL_APK"
           echo "DEBUG_APK=$FINAL_APK" >> $GITHUB_ENV
+          echo "DEBUG_APK=$FINAL_APK" >> $GITHUB_OUTPUT
 
       - name: Verify Debug APK signature
         run: |
-          "$ANDROID_SDK_ROOT/build-tools/36.1.0/apksigner" verify --verbose "${{ env.DEBUG_APK }}"
+          "$ANDROID_SDK_ROOT/build-tools/36.1.0/apksigner" verify --verbose "${{ steps.apk.outputs.DEBUG_APK }}"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ env.VERSION_NAME }}
-          name: X1 BOX v${{ env.VERSION_NAME }}
+          tag_name: v${{ steps.meta.outputs.VERSION_NAME }}
+          name: X1 BOX v${{ steps.meta.outputs.VERSION_NAME }}
           draft: false
           prerelease: false
           body: |
@@ -166,4 +166,4 @@ jobs:
             📌 Commit: [`${{ steps.commit.outputs.hash }}`](https://github.com/izzy2lost/xemu/commit/${{ steps.commit.outputs.hash }}) — ${{ steps.commit.outputs.msg }}
 
             ⚠️ APK signed with debug key. Only for testing.
-          files: ${{ env.DEBUG_APK }}
+          files: ${{ steps.apk.outputs.DEBUG_APK }}
