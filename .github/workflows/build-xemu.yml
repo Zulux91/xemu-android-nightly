@@ -1,4 +1,4 @@
-# .github/workflows/build-xemu.yml
+yaml# .github/workflows/build-xemu.yml
 name: Build X1 BOX
 
 on:
@@ -60,13 +60,10 @@ jobs:
 
       - name: Fix gradle and CMake configuration for Linux
         run: |
-          # Fix line endings y permisos de gradle
           find xemu/android -type f \( -name "*.properties" -o -name "*.gradle" -o -name "*.kts" -o -name "gradlew" \) | xargs dos2unix
           sed -i '/org.gradle.java.home/d' xemu/android/gradle.properties
           sed -i "s/DEFAULT_JVM_OPTS='\".*\"'/DEFAULT_JVM_OPTS=''/" xemu/android/gradlew
           chmod +x xemu/android/gradlew
-
-          # Fix rutas del NDK hardcodeadas a Windows en CMakeLists.txt
           sed -i 's|windows-x86_64|linux-x86_64|g' \
             xemu/android/app/src/main/cpp/CMakeLists.txt
 
