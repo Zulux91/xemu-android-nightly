@@ -55,7 +55,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: xemu/android/app/.cxx
-          key: cmake-arm64-${{ github.event.inputs.ref }}-${{ github.run_id }}
+          key: cmake-arm64-${{ github.event.inputs.ref }}-${{ hashFiles('xemu/android/app/src/main/cpp/CMakeLists.txt', 'xemu/android/app/build.gradle.kts') }}
           restore-keys: cmake-arm64-${{ github.event.inputs.ref }}-
 
       - name: Fix gradle and CMake configuration for Linux
