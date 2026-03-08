@@ -49,9 +49,10 @@ jobs:
           key: cmake-arm64-${{ github.event.inputs.ref }}-${{ github.run_id }}
           restore-keys: cmake-arm64-${{ github.event.inputs.ref }}-
 
-      - name: Grant execute permission to gradlew
+      - name: Fix gradlew line endings and permissions
         run: |
-          sed -i 's/\r//' xemu/android/gradlew
+          sudo apt-get install -y dos2unix
+          dos2unix xemu/android/gradlew
           chmod +x xemu/android/gradlew
 
       - name: Build Debug APK
