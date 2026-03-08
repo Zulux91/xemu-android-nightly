@@ -1,2 +1,46 @@
-# xemu-android-nightly
-Nightly builds from the Android xemu emulator.
+# X1 BOX Android Builder
+
+Automated build pipeline for [X1 BOX](https://github.com/izzy2lost/xemu) — an Original Xbox emulator for Android based on [xemu](https://xemu.app).
+
+This repository contains no source code. It exists solely to build and release APKs from the upstream source via GitHub Actions.
+
+---
+
+## How it works
+
+Triggering the workflow will:
+
+1. Clone [izzy2lost/xemu](https://github.com/izzy2lost/xemu) with all submodules
+2. Set up the Android SDK, NDK, CMake, Meson and Rust toolchain
+3. Compile the native Xbox emulation core for `arm64-v8a`
+4. Package and sign the APK with a debug key
+5. Publish the APK as a GitHub Release
+
+## Usage
+
+1. Go to the **Actions** tab
+2. Select **Build X1 BOX**
+3. Click **Run workflow**
+4. Optionally specify a branch or tag (defaults to `master`)
+5. Once the build finishes, the APK will be available under [Releases](../../releases)
+
+## Device Requirements
+
+| Requirement | Minimum |
+|---|---|
+| Android version | 8.0 (API 26) |
+| Architecture | 64-bit ARM (`arm64-v8a`) |
+| GPU | Vulkan-capable |
+| RAM | 8 GB recommended |
+
+## Notes
+
+- APKs produced here are signed with a **debug key** and intended for testing only
+- This repo is not affiliated with Microsoft, xemu-project, or izzy2lost
+- You must provide your own legally obtained Xbox BIOS and game files to use the emulator
+- Compatibility and performance vary by device and game
+
+## Credits
+
+- Emulator core: [xemu-project/xemu](https://github.com/xemu-project/xemu)
+- Android port: [izzy2lost/xemu](https://github.com/izzy2lost/xemu)
